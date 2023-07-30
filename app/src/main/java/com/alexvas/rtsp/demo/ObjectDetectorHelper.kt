@@ -3,16 +3,29 @@ package com.alexvas.rtsp.demo
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
-import android.util.Log
+
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
+import org.tensorflow.lite.support.image.ops.ResizeOp.ResizeMethod
+import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp
+import org.tensorflow.lite.support.image.ops.Rot90Op
 import org.tensorflow.lite.task.core.BaseOptions
 import org.tensorflow.lite.task.vision.detector.Detection
 import org.tensorflow.lite.task.vision.detector.ObjectDetector
 import timber.log.Timber
 
+
+import java.io.ByteArrayOutputStream
+import java.lang.Compiler.command
+
+// TELEGRAM
+import com.github.kotlintelegrambot.bot
+import com.github.kotlintelegrambot.dispatch
+import com.github.kotlintelegrambot.dispatcher.command
+import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.network.fold
 
 class ObjectDetectorHelper(
     var threshold: Float = 0.50f,
@@ -23,7 +36,6 @@ class ObjectDetectorHelper(
     val context: Context,
     val objectDetectorListener: DetectorListener?
 ) {
-
     // For this example this needs to be a var so it can be reset on changes. If the ObjectDetector
     // will not change, a lazy val would be preferable.
     private var objectDetector: ObjectDetector? = null
@@ -42,6 +54,7 @@ class ObjectDetectorHelper(
     // that are created on the main thread and used on a background thread, but
     // the GPU delegate needs to be used on the thread that initialized the detector
     fun setupObjectDetector() {
+
         // Create the base options for the detector using specifies max results and score threshold
         val optionsBuilder =
             ObjectDetector.ObjectDetectorOptions.builder()
@@ -96,6 +109,7 @@ class ObjectDetectorHelper(
     private var totalInferenceTime: Long = 0
     private var inferenceCount: Int = 0
 
+
     fun detect(image: Bitmap, imageRotation: Int) {
         if (objectDetector == null) {
             setupObjectDetector()
@@ -105,7 +119,7 @@ class ObjectDetectorHelper(
         var inferenceTime = SystemClock.uptimeMillis()
 
         val imageProcessor = ImageProcessor.Builder()
-            .add(ResizeOp(320, 320, ResizeOp.ResizeMethod.BILINEAR))
+            .add(ResizeOp(320, 320, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
             .build()
 
         // Preprocess the image and convert it into a TensorImage for detection.

@@ -1,37 +1,43 @@
 package com.alexvas.rtsp.demo
 
-/*
- * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+//import kotlinx.coroutines.NonCancellable
+//import com.github.kotlintelegrambot.network.fold
+//import kotlinx.coroutines.NonCancellable.message
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.util.Log
-import android.graphics.Rect
-import android.graphics.RectF
+import android.graphics.*
+import android.hardware.display.DisplayManager
+import android.media.projection.MediaProjection
+import android.net.Uri
+import android.os.Environment
+import android.os.Handler
+import android.os.HandlerThread
+import android.provider.MediaStore
 import android.util.AttributeSet
+import android.util.Log
+import android.view.PixelCopy
+import android.view.SurfaceView
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
-import java.util.LinkedList
-import kotlin.math.max
+import androidx.recyclerview.widget.RecyclerView
+import com.alexvas.rtsp.demo.databinding.FragmentLiveBinding
+import com.github.kotlintelegrambot.bot
+import com.github.kotlintelegrambot.dispatch
+import com.github.kotlintelegrambot.dispatcher.command
+import com.github.kotlintelegrambot.entities.ChatId
+import kotlinx.coroutines.*
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.tensorflow.lite.task.vision.detector.Detection
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
+
 
 class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
@@ -73,6 +79,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     @SuppressLint("SetTextI18n")
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
+
 
         for (result in results) {
             if (result.categories[0].label != "person") continue
@@ -126,4 +133,5 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     companion object {
         private const val BOUNDING_RECT_TEXT_PADDING = 8
     }
+
 }
