@@ -35,8 +35,8 @@ open class RtspSurfaceView: SurfaceView {
     private var audioFrameQueue = FrameQueue(10)
     private var videoDecodeThread: VideoDecodeThread? = null
     private var audioDecodeThread: AudioDecodeThread? = null
-    private var surfaceWidth = 1920
-    private var surfaceHeight = 1080
+    private var surfaceWidth = 1280
+    private var surfaceHeight = 720
     private var statusListener: RtspStatusListener? = null
     private val uiHandler = Handler(Looper.getMainLooper())
     private var videoMimeType: String = "video/avc"

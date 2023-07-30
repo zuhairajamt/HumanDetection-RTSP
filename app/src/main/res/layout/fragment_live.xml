@@ -37,7 +37,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="0dp">
             <EditText
                 android:id="@+id/etRtspRequest"
                 android:layout_width="match_parent"
@@ -49,7 +49,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="0dp">
             <EditText
                 android:id="@+id/etRtspUsername"
                 android:layout_width="match_parent"
@@ -60,7 +60,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="0dp"
             app:passwordToggleEnabled="true">
             <EditText
                 android:id="@+id/etRtspPassword"
@@ -68,6 +68,32 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
                 android:hint="RTSP password"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            app:passwordToggleEnabled="true">
+            <EditText
+                android:id="@+id/etBotToken"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:hint="BOT Token"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            app:passwordToggleEnabled="true">
+            <EditText
+                android:id="@+id/etBotId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:hint="Chat ID"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
@@ -80,14 +106,14 @@
                 android:id="@+id/cbVideo"
                 android:text="Video"
                 android:checked="true"
-                android:layout_margin="10dp"
+                android:layout_margin="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <CheckBox
                 android:id="@+id/cbAudio"
                 android:text="Audio"
                 android:checked="false"
-                android:layout_margin="10dp"
+                android:layout_margin="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
@@ -95,7 +121,7 @@
                 android:id="@+id/cbDebug"
                 android:text="Debug"
                 android:checked="false"
-                android:layout_margin="20dp"
+                android:layout_margin="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
@@ -106,12 +132,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginBottom="5dp"
+            android:layout_marginBottom="0dp"
             android:text="Start RTSP" />
 
+<!--        // 300dp original-->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="720dp"
+            android:id="@+id/frame_layout"
             android:animateLayoutChanges="true">
             <com.alexvas.rtsp.widget.RtspSurfaceView
                 android:layout_width="match_parent"

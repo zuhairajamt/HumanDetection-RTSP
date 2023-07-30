@@ -11,12 +11,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class VideoDecodeThread (
-        private val surface: Surface,
-        private val mimeType: String,
-        private val width: Int,
-        private val height: Int,
-        private val videoFrameQueue: FrameQueue,
-        private val onFrameRenderedListener: OnFrameRenderedListener) : Thread() {
+    private val surface: Surface,
+    private val mimeType: String,
+    private val width: Int,
+    private val height: Int,
+    private val videoFrameQueue: FrameQueue,
+    private val onFrameRenderedListener: OnFrameRenderedListener) : Thread() {
 
     private var exitFlag: AtomicBoolean = AtomicBoolean(false)
 
@@ -131,4 +131,3 @@ class VideoDecodeThread (
     }
 
 }
-

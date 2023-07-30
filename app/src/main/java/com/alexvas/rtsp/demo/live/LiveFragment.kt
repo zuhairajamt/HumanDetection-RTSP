@@ -5,9 +5,8 @@ package com.alexvas.rtsp.demo.live
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
+import android.os.Build.VERSION_CODES.R
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -21,10 +20,21 @@ import com.alexvas.rtsp.demo.ObjectDetectorHelper
 import com.alexvas.rtsp.demo.R
 import com.alexvas.rtsp.demo.databinding.FragmentLiveBinding
 import com.alexvas.rtsp.widget.RtspSurfaceView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okhttp3.*
 import org.tensorflow.lite.task.vision.detector.Detection
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 @SuppressLint("LogNotTimber")
@@ -38,6 +48,9 @@ class LiveFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     private lateinit var bitmapBuffer: Bitmap
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
     private lateinit var cameraExecutor: ExecutorService
+
+    private var personDetected = false
+    private var detectionStartTime = 0L
 
     private val rtspStatusListener = object: RtspSurfaceView.RtspStatusListener {
         override fun onRtspStatusConnecting() {
@@ -113,15 +126,14 @@ class LiveFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         // Create a new timer
         objectDetectionTimer = Timer()
 
-        // Schedule the task to run at a specified interval
         objectDetectionTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                // Run the object detection code here
+
                 val surfaceView = binding.svVideo
                 val bitmap = getBitmapFromViewUsingPixelCopy(surfaceView)
                 detectObjects(bitmap)
             }
-        }, 3000, 1000) // Specify the interval in milliseconds (e.g., 5000 for 5 seconds)
+        }, 3000, 500)
     }
 
     private fun getBitmapFromViewUsingPixelCopy(view: RtspSurfaceView): Bitmap {
@@ -386,11 +398,132 @@ class LiveFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             // Force a redraw
             binding.overlay.invalidate()
         }
+
+        val personDetections = results?.filter { detection ->
+            detection.categories.isNotEmpty() && detection.categories[0].label == "person"
+        }
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
+
+        val currentDate = dateFormat.format(Date())
+        val currentTimed = timeFormat.format(Date())
+        val currentDay = dayFormat.format(Date())
+
+        if (results != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                if (personDetections != null && personDetections.isNotEmpty()) {
+                    if (!personDetected) {
+                        personDetected = true
+                        detectionStartTime = System.currentTimeMillis()
+                    } else {
+                        val currentTime = System.currentTimeMillis()
+                        val detectionDuration = currentTime - detectionStartTime
+                        if (detectionDuration in 15000..20000) {
+                            val numberOfPersons = results.count { it.categories[0].label == "person" }
+                            val messageText = "**Detected $numberOfPersons " + "Person** \n" +
+                                    "Date: $currentDate \n" +
+                                    "Time: $currentTimed \n" +
+                                    "Day: $currentDay \n"
+
+                            val client = OkHttpClient()
+
+                            val bitmap = getSnapshot()
+                            val photoUri = bitmap?.let { saveBitmapToStorage(it) }
+
+                            val token = binding.etBotToken.text.toString()
+                            val chatId = binding.etBotId.text.toString()
+
+                            Log.d("TOKEN", token)
+                            Log.d("chatId", chatId)
+
+                            val photoFile = File(photoUri.toString())
+
+                            val mediaType = MediaType.parse("image/jpeg")
+                            val requestBody = MultipartBody.Builder()
+                                .setType(MultipartBody.FORM)
+                                .addFormDataPart("chat_id", "$chatId")
+                                .addFormDataPart("photo", photoFile.name, RequestBody.create(mediaType, photoFile))
+                                .addFormDataPart("caption", messageText)
+                                .build()
+
+                            // Create the request
+                            val request = Request.Builder()
+                                .url("https://api.telegram.org/bot${token}/sendPhoto")
+                                .post(requestBody)
+                                .build()
+
+                            // Execute the request and handle the response
+                            try {
+                                val response = client.newCall(request).execute()
+                                println("Response code: ${response.code()}")
+                                println("Response body: ${response.body()?.string()}")
+                                if (response.isSuccessful) {
+                                    println("Photo sent successfully!")
+                                } else {
+                                    println("Failed to send photo.")
+                                }
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+
+                            delay(10000L)
+
+                            personDetected = false
+                            detectionStartTime = 0L
+                        }
+                    }
+                } else {
+                    personDetected = false
+                    detectionStartTime = 0L
+                }
+
+            }
+        }
     }
 
     override fun onError(error: String) {
         activity?.runOnUiThread {
             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    open fun getSnapshot(): Bitmap? {
+        if (DEBUG) Log.v(TAG, "getSnapshot()")
+        val surfaceBitmap = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888)
+        val lock = Object()
+        val success = AtomicBoolean(false)
+        val thread = HandlerThread("PixelCopyHelper")
+        thread.start()
+        val sHandler = Handler(thread.looper)
+        val listener = PixelCopy.OnPixelCopyFinishedListener { copyResult ->
+            success.set(copyResult == PixelCopy.SUCCESS)
+            synchronized (lock) {
+                lock.notify()
+            }
+        }
+        synchronized (lock) {
+            PixelCopy.request(binding.svVideo.holder.surface, surfaceBitmap, listener, sHandler)
+            lock.wait()
+        }
+        thread.quitSafely()
+        return if (success.get()) surfaceBitmap else null
+    }
+
+    open fun saveBitmapToStorage(bitmap: Bitmap): File? {
+        val fileName = "detected_person_${System.currentTimeMillis()}.jpg"
+        val storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+        val imageFile = File(storageDir, fileName)
+
+        return try {
+            val outputStream: OutputStream = FileOutputStream(imageFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.close()
+            imageFile
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
         }
     }
 
