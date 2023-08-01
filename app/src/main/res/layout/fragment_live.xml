@@ -138,7 +138,7 @@
 <!--        // 300dp original-->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="720dp"
+            android:layout_height="300dp"
             android:id="@+id/frame_layout"
             android:animateLayoutChanges="true">
             <com.alexvas.rtsp.widget.RtspSurfaceView

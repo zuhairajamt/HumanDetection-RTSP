@@ -1,12 +1,9 @@
 package com.alexvas.rtsp.demo.live
 
-
-//import org.tensorflow.lite.examples.objectdetection.databinding.FragmentCameraBinding
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.*
-import android.os.Build.VERSION_CODES.R
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
